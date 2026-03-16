@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0b0d14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VidaApp">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>VidaApp</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0d14;--s1:#13151f;--s2:#1c1f2e;--s3:#252840;
+  --border:#2a2d45;--text:#eef0ff;--muted:#6b6f90;
+  --r:14px;--font:'Plus Jakarta Sans',sans-serif;--head:'Space Grotesk',sans-serif;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);max-width:430px;margin:0 auto;min-height:100vh;overflow-x:hidden}
+
+/* HEADER */
+.hdr{position:sticky;top:0;z-index:90;background:var(--s1);border-bottom:1px solid var(--border);padding:14px 18px 0}
+.hdr-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.logo{font-family:var(--head);font-size:20px;background:linear-gradient(100deg,#6ee7f7,#a78bfa,#f76b8a);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hdr-date{font-size:11px;color:var(--muted);text-align:right}
+.hdr-date b{color:var(--text);display:block;font-size:13px}
+.mtabs{display:flex;gap:5px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none}
+.mtabs::-webkit-scrollbar{display:none}
+.mtab{flex-shrink:0;padding:6px 13px;border-radius:20px;font-size:11.5px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);color:var(--muted);background:var(--s2);transition:all .18s;white-space:nowrap}
+.mtab.on{color:#fff;border-color:var(--tc);background:color-mix(in srgb,var(--tc) 20%,transparent);box-shadow:0 0 12px color-mix(in srgb,var(--tc) 40%,transparent)}
+
+/* PAGES */
+.page{display:none;padding:14px 14px 100px;animation:fadeUp .25s ease}
+.page.on{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* TODAY HERO */
+.today-hero{background:linear-gradient(135deg,#12173a,#1d1035);border:1px solid #3a306055;border-radius:18px;padding:18px;margin-bottom:14px;position:relative;overflow:hidden}
+.today-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:130px;height:130px;border-radius:50%;background:radial-gradient(circle,#a78bfa22,transparent 70%)}
+.th-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.th-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.th-stat{background:#ffffff08;border:1px solid #ffffff0d;border-radius:10px;padding:10px 6px;text-align:center}
+.th-stat .n{font-size:22px;font-weight:800}
+.th-stat .l{font-size:9px;color:var(--muted);margin-top:2px}
+
+/* ALARM PILL */
+.alarm-pill{display:flex;align-items:center;gap:12px;background:linear-gradient(90deg,#0d2b1a,#0d1f2b);border:1px solid #4ecb7133;border-radius:14px;padding:12px 16px;margin-bottom:14px}
+.ap-bell{font-size:26px;animation:shake 2.5s infinite}
+@keyframes shake{0%,100%{transform:rotate(0)}8%{transform:rotate(-14deg)}16%{transform:rotate(14deg)}24%{transform:rotate(0)}}
+.ap-info{flex:1}
+.ap-info .al{font-size:10px;color:#4ecb71;text-transform:uppercase;letter-spacing:.8px}
+.ap-info .an{font-size:14px;font-weight:700;margin:2px 0}
+.ap-info .at{font-size:12px;color:var(--muted)}
+.ap-time{background:#4ecb71;color:#000;font-weight:800;font-size:13px;padding:5px 12px;border-radius:20px;flex-shrink:0}
+
+/* CAT BLOCK */
+.cat-block{margin-bottom:10px;border-radius:16px;overflow:hidden;border:1px solid var(--border)}
+.cat-head{display:flex;align-items:center;gap:10px;padding:13px 14px;background:var(--s2);cursor:pointer;user-select:none;transition:background .15s}
+.cat-head:hover{background:var(--s3)}
+.cat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.cat-icon{font-size:18px;flex-shrink:0}
+.cat-name{font-size:13px;font-weight:800;flex:1}
+.cat-count{font-size:11px;color:var(--muted);background:var(--s3);padding:2px 8px;border-radius:20px}
+.cat-chevron{font-size:12px;color:var(--muted);transition:transform .25s}
+.cat-block.open .cat-chevron{transform:rotate(180deg)}
+.cat-body{display:none;background:var(--s1)}
+.cat-block.open .cat-body{display:block}
+
+/* ITEMS */
+.item{display:flex;align-items:center;gap:10px;padding:11px 14px 11px 10px;border-top:1px solid #ffffff05;cursor:pointer;transition:background .12s;position:relative}
+.item:hover{background:#ffffff04}
+.item.done{opacity:.4}
+.item.done .item-title{text-decoration:line-through}
+.item-stripe{width:3px;height:36px;border-radius:2px;flex-shrink:0;background:var(--ic,#555)}
+.item-icon{font-size:16px;flex-shrink:0}
+.item-body{flex:1;min-width:0}
+.item-title{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.item-right{text-align:right;flex-shrink:0}
+.item-time{font-size:13px;font-weight:800;color:var(--ic,#888)}
+.item-rep{font-size:10px;color:var(--muted)}
+.item-del{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:8px;opacity:0;transition:opacity .15s}
+.item:hover .item-del{opacity:1}
+
+/* BADGES */
+.badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:5px;vertical-align:middle}
+.b-red{background:#f76b4f22;color:#f76b4f}
+.b-amber{background:#f7a94f22;color:#f7a94f}
+.b-green{background:#4ecb7122;color:#4ecb71}
+.b-blue{background:#4f8ef722;color:#4f8ef7}
+.b-purple{background:#a78bfa22;color:#a78bfa}
+.b-share{background:#4f8ef722;color:#4f8ef7}
+.b-priv{background:#a78bfa22;color:#a78bfa}
+
+/* SHOPPING ITEMS */
+.citem{display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid #ffffff05;cursor:pointer;transition:opacity .2s;position:relative}
+.citem.checked{opacity:.38}
+.cbox{width:20px;height:20px;border-radius:6px;border:2px solid var(--cc,#f9d94f);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.citem.checked .cbox{background:var(--cc,#f9d94f);border-color:var(--cc,#f9d94f)}
+.citem.checked .cbox::after{content:'✓';color:#000;font-size:11px;font-weight:900}
+.citem.checked .clabel{text-decoration:line-through;color:var(--muted)}
+.clabel{font-size:13px;font-weight:600;flex:1}
+.cqty{font-size:11px;color:var(--muted);background:var(--s3);padding:2px 8px;border-radius:8px}
+.citem .item-del{right:8px}
+.citem:hover .item-del{opacity:1}
+
+/* PROGRESS */
+.prog-row{padding:8px 14px 10px;border-top:1px solid var(--border)}
+.prog-label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:5px}
+.prog-bar{height:5px;background:var(--s3);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;transition:width .5s ease}
+
+/* FINANCE SUMMARY */
+.fin-sum{margin:10px 14px 4px;background:var(--s2);border-radius:12px;padding:12px;border:1px solid var(--border)}
+.fin-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #ffffff06;font-size:13px}
+.fin-row:last-child{border-bottom:none}
+.fin-lbl{color:var(--muted)}
+.fin-val{font-weight:800}
+.ok{color:#4ecb71}.warn{color:#f7a94f}.bad{color:#f76b4f}
+
+/* VEHICLE GRID */
+.veh-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px 14px}
+.vg-item{background:var(--s3);border-radius:10px;padding:9px 10px}
+.vg-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.vg-v{font-size:12px;font-weight:700;margin-top:2px}
+.vg-s{font-size:10px;margin-top:2px}
+
+/* ADD BUTTON ROW */
+.cat-add-row{padding:8px 14px;border-top:1px solid var(--border);display:flex;justify-content:flex-end}
+.cat-add{background:var(--cat-c,#4f8ef7);border:none;border-radius:20px;color:#fff;font-size:11px;font-weight:700;padding:6px 16px;cursor:pointer;font-family:var(--font);transition:opacity .15s}
+.cat-add:hover{opacity:.85}
+
+/* EMPTY STATE */
+.empty-items{padding:16px 14px;text-align:center;color:var(--muted);font-size:12px}
+
+/* FAB */
+.fab{position:fixed;bottom:74px;right:18px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#6ee7f7,#a78bfa);border:none;color:#fff;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px #a78bfa55;transition:transform .2s;z-index:80}
+.fab:hover{transform:scale(1.08) rotate(90deg)}
+
+/* BOTTOM NAV */
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#13151fee;backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;padding:6px 0 10px;z-index:90}
+.bn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:var(--muted);font-size:9.5px;font-weight:700;padding:4px 2px;transition:color .15s}
+.bn.on{color:#a78bfa}
+.bn .bi{font-size:19px}
+.bn.on .bi{filter:drop-shadow(0 0 5px #a78bfa)}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:#000c;z-index:200;align-items:flex-end;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:var(--s1);border-radius:24px 24px 0 0;width:100%;max-width:430px;padding:20px 18px 40px;animation:slideUp .28s ease;max-height:90vh;overflow-y:auto}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mhandle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px;cursor:pointer}
+.modal h3{font-size:17px;font-weight:800;margin-bottom:18px}
+.fg{margin-bottom:12px}
+.fg label{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px}
+.fg input,.fg select,.fg textarea{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;outline:none;transition:border-color .2s}
+.fg input:focus,.fg select:focus{border-color:#a78bfa}
+.fg select option{background:#13151f}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.cg-btn{background:var(--s2);border:1.5px solid var(--border);border-radius:10px;padding:8px 4px;cursor:pointer;text-align:center;transition:all .15s;color:var(--muted)}
+.cg-btn.sel{border-color:var(--gc);background:color-mix(in srgb,var(--gc) 18%,transparent);color:var(--text)}
+.cg-btn .ge{font-size:18px}.cg-btn .gl{font-size:9.5px;font-weight:700;margin-top:3px}
+.save-btn{width:100%;padding:14px;background:linear-gradient(90deg,#a78bfa,#6ee7f7);border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:800;cursor:pointer;margin-top:16px;font-family:var(--font)}
+.btn-cancel,.btn-danger{border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);width:100%}
+.btn-cancel{background:var(--s3);color:var(--text)}
+.btn-danger{background:#f76b4f22;color:#f76b4f;border:1px solid #f76b4f44}
+
+/* TOAST */
+.toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:linear-gradient(135deg,#1e2340,#2a1f3d);border:1px solid #a78bfa44;border-radius:14px;padding:12px 18px;font-size:13px;font-weight:700;z-index:300;opacity:0;transition:all .3s;pointer-events:none;max-width:380px;width:90%;text-align:center;box-shadow:0 4px 20px #00000055}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* NOTIF PERMISSION BAR */
+.perm-bar{background:linear-gradient(90deg,#1e2340,#2a1f3d);border:1px solid #a78bfa33;border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.perm-bar p{flex:1;font-size:12px;color:var(--muted)}
+.perm-btn{background:#a78bfa;border:none;border-radius:8px;color:#fff;font-size:11px;font-weight:700;padding:6px 12px;cursor:pointer;font-family:var(--font);flex-shrink:0}
+
+/* INSTALL BAR */
+.install-bar{background:linear-gradient(90deg,#0d2b1a,#0d1f2b);border:1px solid #4ecb7133;border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.install-bar p{flex:1;font-size:12px;color:var(--muted)}
+.install-btn{background:#4ecb71;border:none;border-radius:8px;color:#000;font-size:11px;font-weight:700;padding:6px 12px;cursor:pointer;font-family:var(--font);flex-shrink:0}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-row">
+    <div class="logo">⚡ VidaApp</div>
+    <div class="hdr-date"><b id="hdr-day">...</b><span id="hdr-mon">...</span></div>
+  </div>
+  <div class="mtabs" id="mtabs"></div>
+</div>
+
+<div id="app"></div>
+
+<div class="bnav" id="bnav">
+  <div class="bn on"  data-go="hoje"      ><div class="bi">🏠</div>Hoje</div>
+  <div class="bn"     data-go="familia"   ><div class="bi">👨‍👩‍👧</div>Família</div>
+  <div class="bn"     data-go="saude"     ><div class="bi">💊</div>Saúde</div>
+  <div class="bn"     data-go="trabalho"  ><div class="bi">💼</div>Trabalho</div>
+  <div class="bn"     data-go="financeiro"><div class="bi">💰</div>Finanças</div>
+</div>
+
+<button class="fab" id="fab">＋</button>
+<div id="toast" class="toast"></div>
+
+<!-- MODAL: ADD -->
+<div id="ov-add" class="overlay">
+<div class="modal">
+  <div class="mhandle" onclick="closeAdd()"></div>
+  <h3 id="modal-h">➕ Nova Tarefa / Alarme</h3>
+  <input type="hidden" id="edit-id">
+  <div class="fg"><label>Título *</label><input type="text" id="f-title" placeholder="Ex: Remédio Luna, Reunião..."></div>
+  <div class="fg">
+    <label>Categoria *</label>
+    <div class="cat-grid" id="cat-grid"></div>
+  </div>
+  <div class="fg"><label>Subcategoria</label><select id="f-sub"></select></div>
+  <div class="fg"><label>Ícone (emoji)</label><input type="text" id="f-icon" placeholder="💊" maxlength="4"></div>
+  <div class="two-col">
+    <div class="fg"><label>Data</label><input type="date" id="f-date"></div>
+    <div class="fg"><label>Horário</label><input type="time" id="f-time"></div>
+  </div>
+  <div class="two-col">
+    <div class="fg"><label>Repetição</label>
+      <select id="f-repeat">
+        <option value="">Não repetir</option>
+        <option value="daily">Diário</option>
+        <option value="every3h">A cada 3h</option>
+        <option value="weekly">Semanal</option>
+        <option value="monthly">Mensal</option>
+        <option value="yearly">Anual</option>
+      </select>
+    </div>
+    <div class="fg"><label>Prioridade</label>
+      <select id="f-priority">
+        <option value="high">Alta</option>
+        <option value="medium">Média</option>
+        <option value="low">Baixa</option>
+      </select>
+    </div>
+  </div>
+  <div class="two-col">
+    <div class="fg"><label>Visibilidade</label>
+      <select id="f-shared">
+        <option value="0">Só eu</option>
+        <option value="1">Compartilhar</option>
+      </select>
+    </div>
+    <div class="fg"><label>🔔 Alarme</label>
+      <select id="f-alarm">
+        <option value="1">Ativo</option>
+        <option value="0">Desligado</option>
+      </select>
+    </div>
+  </div>
+  <div class="fg"><label>Observações</label><input type="text" id="f-notes" placeholder="Ex: 1 comprimido, Dr. Santos..."></div>
+  <div class="fg" id="fg-amount" style="display:none"><label>Valor (R$)</label><input type="number" id="f-amount" placeholder="0.00" step="0.01"></div>
+  <button class="save-btn" onclick="saveItem()">🔔 Salvar e Ativar Alarme</button>
+</div>
+</div>
+
+<!-- MODAL: DELETE -->
+<div id="ov-del" class="overlay">
+<div class="modal">
+  <div class="mhandle" onclick="closeDel()"></div>
+  <h3>🗑️ Excluir item?</h3>
+  <p style="color:var(--muted);margin-bottom:20px;font-size:14px">Esta ação não pode ser desfeita.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <button class="btn-cancel" onclick="closeDel()">Cancelar</button>
+    <button class="btn-danger" id="btn-del-ok">Excluir</button>
+  </div>
+</div>
+</div>
+
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════
+   CONFIG
+═══════════════════════════════════════ */
+const CATS = {
+  pessoal:    {label:'Pessoal',    icon:'👤',  color:'#4f8ef7'},
+  familia:    {label:'Família',    icon:'👨‍👩‍👧', color:'#f76b8a'},
+  saude:      {label:'Saúde',      icon:'💊',  color:'#4ecb71'},
+  pets:       {label:'Pets',       icon:'🐾',  color:'#f7a94f'},
+  trabalho:   {label:'Trabalho',   icon:'💼',  color:'#a78bfa'},
+  casa:       {label:'Casa',       icon:'🏡',  color:'#38d9d9'},
+  compras:    {label:'Compras',    icon:'🛒',  color:'#f9d94f'},
+  veiculos:   {label:'Veículos',   icon:'🚗',  color:'#f76b4f'},
+  plantas:    {label:'Plantas',    icon:'🌿',  color:'#6bcf7f'},
+  financeiro: {label:'Finanças',   icon:'💰',  color:'#4ff7c0'},
+  documentos: {label:'Docs',       icon:'📄',  color:'#c084fc'},
+};
+
+const SUBS = {
+  pessoal:    [{v:'compromissos',l:'Compromissos'},{v:'remedios',l:'Remédios'},{v:'consultas',l:'Consultas'},{v:'vacinas',l:'Vacinas'}],
+  familia:    [{v:'bebe',l:'Bebê'},{v:'esposa',l:'Esposa'}],
+  saude:      [{v:'remedios',l:'Remédios'},{v:'consultas',l:'Consultas'},{v:'vacinas',l:'Vacinas'}],
+  pets:       [{v:'luna',l:'Luna (Cão)'},{v:'max',l:'Max (Gato)'}],
+  trabalho:   [{v:'reunioes',l:'Reuniões'},{v:'valores-receber',l:'Valores a Receber'},{v:'tarefas',l:'Tarefas'}],
+  casa:       [{v:'alimentacao',l:'Alimentação'},{v:'limpeza',l:'Limpeza'}],
+  compras:    [{v:'mercado',l:'Mercado'},{v:'farmacia',l:'Farmácia'}],
+  veiculos:   [{v:'hb20',l:'HB20'},{v:'strada',l:'Strada'}],
+  plantas:    [{v:'rega',l:'Rega'},{v:'manutencao',l:'Manutenção'}],
+  financeiro: [{v:'pagar',l:'A Pagar'},{v:'receber',l:'A Receber'},{v:'investimento',l:'Investimentos'}],
+  documentos: [{v:'pessoais',l:'Pessoais'},{v:'veiculos-doc',l:'Veículos'},{v:'casa-doc',l:'Casa & Seguros'}],
+};
+
+const REPEATS = {daily:'Diário',every3h:'A cada 3h',weekly:'Semanal',monthly:'Mensal',yearly:'Anual'};
+const PRI_LABELS = {high:'🔴 Alta',medium:'🟡 Média',low:'🟢 Baixa'};
+
+const PAGE_DEFS = {
+  pessoal: [
+    {title:'Compromissos',icon:'📅',sub:'compromissos'},
+    {title:'Remédios',icon:'💊',sub:'remedios'},
+    {title:'Consultas',icon:'🩺',sub:'consultas'},
+    {title:'Vacinas',icon:'💉',sub:'vacinas'},
+  ],
+  familia: [
+    {title:'Bebê',icon:'👶',sub:'bebe'},
+    {title:'Esposa',icon:'👩',sub:'esposa'},
+  ],
+  saude: [
+    {title:'Remédios (todos)',icon:'💊',sub:'remedios'},
+    {title:'Consultas Médicas',icon:'🩺',sub:'consultas'},
+    {title:'Vacinas',icon:'💉',sub:'vacinas'},
+  ],
+  pets: [
+    {title:'Luna (Cão)',icon:'🐕',sub:'luna'},
+    {title:'Max (Gato)',icon:'🐈',sub:'max'},
+  ],
+  trabalho: [
+    {title:'Reuniões & Compromissos',icon:'📋',sub:'reunioes'},
+    {title:'Valores a Receber',icon:'💵',sub:'valores-receber',finance:true},
+    {title:'Tarefas',icon:'✅',sub:'tarefas'},
+  ],
+  casa: [
+    {title:'Alimentação',icon:'🍳',sub:'alimentacao'},
+    {title:'Limpeza & Organização',icon:'🧹',sub:'limpeza'},
+  ],
+  compras: [
+    {title:'Mercado',icon:'🛒',sub:'mercado',shop:true,color:'#f9d94f'},
+    {title:'Farmácia & Outros',icon:'💊',sub:'farmacia',shop:true,color:'#f9d94f'},
+  ],
+  veiculos: [
+    {title:'HB20 2022 · ABC-1D23',icon:'🚗',sub:'hb20',vehicle:true},
+    {title:'Strada 2019 · XYZ-4E56',icon:'🛻',sub:'strada',vehicle:true},
+  ],
+  plantas: [
+    {title:'Rega',icon:'💧',sub:'rega'},
+    {title:'Adubação & Manutenção',icon:'🌱',sub:'manutencao'},
+  ],
+  financeiro: [
+    {title:'Contas a Pagar',icon:'📤',sub:'pagar',finance:true},
+    {title:'Valores a Receber',icon:'📥',sub:'receber',finance:true},
+    {title:'Investimentos',icon:'🏦',sub:'investimento'},
+  ],
+  documentos: [
+    {title:'Documentos Pessoais',icon:'🪪',sub:'pessoais'},
+    {title:'Veículos',icon:'🚗',sub:'veiculos-doc'},
+    {title:'Casa & Seguros',icon:'🏠',sub:'casa-doc'},
+  ],
+};
+
+const TAB_ORDER = ['hoje','pessoal','familia','saude','pets','trabalho','casa','compras','veiculos','plantas','financeiro','documentos'];
+const TAB_ICONS = {hoje:'🏠',pessoal:'👤',familia:'👨‍👩‍👧',saude:'💊',pets:'🐾',trabalho:'💼',casa:'🏡',compras:'🛒',veiculos:'🚗',plantas:'🌿',financeiro:'💰',documentos:'📄'};
+const TAB_COLORS = {hoje:'#a78bfa',...Object.fromEntries(Object.entries(CATS).map(([k,v])=>[k,v.color]))};
+
+/* ═══════════════════════════════════════
+   DEFAULT DATA
+═══════════════════════════════════════ */
+function defaultData() {
+  return {
+    tasks: [
+      // PESSOAL
+      {id:'p1',cat:'pessoal',sub:'compromissos',icon:'🏋️',title:'Academia',notes:'Seg, Qua, Sex',time:'06:30',repeat:'weekly',priority:'medium',alarm:true,done:false,shared:false},
+      {id:'p2',cat:'pessoal',sub:'compromissos',icon:'💈',title:'Barbearia',notes:'Todo mês',time:'10:00',repeat:'monthly',priority:'low',alarm:false,done:false,shared:false},
+      {id:'p3',cat:'pessoal',sub:'compromissos',icon:'🧘',title:'Meditação',notes:'Antes de dormir',time:'22:00',repeat:'daily',priority:'medium',alarm:true,done:false,shared:false},
+      {id:'p4',cat:'pessoal',sub:'remedios',icon:'💊',title:'Losartana 50mg',notes:'1 comp após café',time:'08:00',repeat:'daily',priority:'high',alarm:true,done:false,shared:false},
+      {id:'p5',cat:'pessoal',sub:'remedios',icon:'💊',title:'Vitamina D',notes:'2000UI',time:'12:00',repeat:'daily',priority:'medium',alarm:true,done:false,shared:false},
+      {id:'p6',cat:'pessoal',sub:'consultas',icon:'❤️',title:'Cardiologista',notes:'Dr. Santos · 09:00',date:'2026-03-20',time:'09:00',alarm:true,done:false,shared:false},
+      {id:'p7',cat:'pessoal',sub:'consultas',icon:'🦷',title:'Dentista',notes:'Semestral — agendar',alarm:false,done:false,shared:false},
+      {id:'p8',cat:'pessoal',sub:'consultas',icon:'👁️',title:'Oftalmologista',notes:'Jun/2026',alarm:false,done:false,shared:false},
+      {id:'p9',cat:'pessoal',sub:'vacinas',icon:'💉',title:'Influenza 2026',notes:'Abr · anual',date:'2026-04-01',alarm:true,done:false,shared:false},
+      {id:'p10',cat:'pessoal',sub:'vacinas',icon:'💉',title:'dTpa adulto',notes:'Reforço dez/27',date:'2027-12-01',alarm:false,done:false,shared:false},
+      // FAMILIA - bebe
+      {id:'f1',cat:'familia',sub:'bebe',icon:'🍼',title:'Amamentação',notes:'A cada 3h · 6x/dia',time:'06:00',repeat:'every3h',priority:'high',alarm:true,done:false,shared:true},
+      {id:'f2',cat:'familia',sub:'bebe',icon:'💧',title:'Vitamina D bebê',notes:'1 gota · manhã',time:'09:00',repeat:'daily',priority:'high',alarm:true,done:false,shared:true},
+      {id:'f3',cat:'familia',sub:'bebe',icon:'👶',title:'Pediatra — 1 mês',notes:'Dr. Carvalho · 14:00',date:'2026-03-10',time:'14:00',alarm:true,done:false,shared:true},
+      {id:'f4',cat:'familia',sub:'bebe',icon:'💉',title:'BCG',notes:'Maternidade',alarm:false,done:true,shared:false},
+      {id:'f5',cat:'familia',sub:'bebe',icon:'💉',title:'Hepatite B 2ª dose',notes:'1 mês · UBS',date:'2026-03-15',alarm:true,done:false,shared:true},
+      {id:'f6',cat:'familia',sub:'bebe',icon:'💉',title:'Penta + VIP + Rota',notes:'2 meses de vida',date:'2026-05-01',alarm:true,done:false,shared:false},
+      {id:'f7',cat:'familia',sub:'esposa',icon:'💊',title:'Vitamina D 2000UI',notes:'Pós-parto · almoço',time:'12:00',repeat:'daily',priority:'high',alarm:true,done:false,shared:true},
+      {id:'f8',cat:'familia',sub:'esposa',icon:'💊',title:'Suplemento ferro',notes:'1 cápsula · jantar',time:'19:00',repeat:'daily',priority:'high',alarm:true,done:false,shared:true},
+      {id:'f9',cat:'familia',sub:'esposa',icon:'🩺',title:'Retorno pós-parto',notes:'Ginecologista',date:'2026-03-25',time:'10:00',alarm:true,done:false,shared:true},
+      // SAUDE
+      {id:'s1',cat:'saude',sub:'remedios',icon:'💊',title:'Losartana (eu)',notes:'08:00 · após café',time:'08:00',repeat:'daily',priority:'high',alarm:true,done:false,shared:false},
+      {id:'s2',cat:'saude',sub:'remedios',icon:'💊',title:'Vitamina D (eu)',notes:'12:00',time:'12:00',repeat:'daily',alarm:true,done:false,shared:false},
+      {id:'s3',cat:'saude',sub:'remedios',icon:'💊',title:'Vitamina D (esposa)',notes:'12:00',time:'12:00',repeat:'daily',alarm:true,done:false,shared:true},
+      {id:'s4',cat:'saude',sub:'remedios',icon:'💊',title:'Ferro (esposa)',notes:'19:00 · jantar',time:'19:00',repeat:'daily',alarm:true,done:false,shared:true},
+      {id:'s5',cat:'saude',sub:'remedios',icon:'💧',title:'Vitamina D (bebê)',notes:'09:00 · 1 gota',time:'09:00',repeat:'daily',alarm:true,done:false,shared:true},
+      {id:'s6',cat:'saude',sub:'consultas',icon:'❤️',title:'Cardiologista (eu)',notes:'Dr. Santos',date:'2026-03-20',time:'09:00',alarm:true,done:false,shared:false},
+      {id:'s7',cat:'saude',sub:'consultas',icon:'🩺',title:'Retorno pós-parto (esposa)',notes:'Ginecologista',date:'2026-03-25',time:'10:00',alarm:true,done:false,shared:true},
+      {id:'s8',cat:'saude',sub:'consultas',icon:'👶',title:'Pediatra (bebê)',notes:'Dr. Carvalho',date:'2026-03-10',time:'14:00',alarm:true,done:false,shared:true},
+      {id:'s9',cat:'saude',sub:'vacinas',icon:'💉',title:'Influenza (eu)',notes:'Abr · anual',date:'2026-04-01',alarm:true,done:false,shared:false},
+      {id:'s10',cat:'saude',sub:'vacinas',icon:'💉',title:'Hepatite B 2ª (bebê)',notes:'15/03 · UBS',date:'2026-03-15',alarm:true,done:false,shared:true},
+      {id:'s11',cat:'saude',sub:'vacinas',icon:'💉',title:'Penta+VIP+Rota (bebê)',notes:'2 meses · mai/26',date:'2026-05-01',alarm:true,done:false,shared:false},
+      {id:'s12',cat:'saude',sub:'vacinas',icon:'💉',title:'Meningocócica C (bebê)',notes:'3 meses · jul/26',date:'2026-07-01',alarm:true,done:false,shared:false},
+      // PETS
+      {id:'pt1',cat:'pets',sub:'luna',icon:'💊',title:'Antipulgas',notes:'1 comp · ração',time:'14:00',repeat:'daily',priority:'high',alarm:true,done:false,shared:false},
+      {id:'pt2',cat:'pets',sub:'luna',icon:'💊',title:'Vermífugo Luna',notes:'A cada 3 meses',date:'2026-03-15',priority:'high',alarm:true,done:false,shared:false},
+      {id:'pt3',cat:'pets',sub:'luna',icon:'💉',title:'V10 Anual',notes:'Clínica VetCare',date:'2026-03-30',alarm:true,done:false,shared:false},
+      {id:'pt4',cat:'pets',sub:'luna',icon:'✂️',title:'Banho e Tosa',notes:'Petshop Amigo Fiel',date:'2026-03-15',time:'10:00',alarm:true,done:false,shared:false},
+      {id:'pt5',cat:'pets',sub:'max',icon:'💊',title:'Vermífugo Max',notes:'1 comp · ração',time:'19:00',repeat:'daily',priority:'high',alarm:true,done:false,shared:false},
+      {id:'pt6',cat:'pets',sub:'max',icon:'💉',title:'V4 Felina',notes:'Anual',date:'2026-03-22',alarm:true,done:false,shared:false},
+      {id:'pt7',cat:'pets',sub:'max',icon:'💉',title:'Antirrábica (Max)',notes:'Reforço nov/26',date:'2026-11-01',alarm:false,done:false,shared:false},
+      // TRABALHO
+      {id:'tr1',cat:'trabalho',sub:'reunioes',icon:'📋',title:'Reunião — Cliente João',notes:'Enviar orçamento antes',date:'2026-03-07',time:'16:00',priority:'high',alarm:true,done:false,shared:false},
+      {id:'tr2',cat:'trabalho',sub:'reunioes',icon:'📊',title:'Relatório mensal',notes:'Prazo: 13/03',date:'2026-03-13',priority:'high',alarm:true,done:false,shared:false},
+      {id:'tr3',cat:'trabalho',sub:'valores-receber',icon:'💵',title:'Cliente A — Projeto Web',notes:'Parcela 2/2',date:'2026-03-10',amount:2800,priority:'high',alarm:true,done:false,shared:false},
+      {id:'tr4',cat:'trabalho',sub:'valores-receber',icon:'💵',title:'Cliente B — Mensalidade',notes:'Recorrente mensal',date:'2026-03-15',amount:1500,alarm:false,done:false,shared:false},
+      {id:'tr5',cat:'trabalho',sub:'valores-receber',icon:'💵',title:'Cliente C — Consultoria',notes:'Pago 01/03',amount:3200,alarm:false,done:true,shared:false},
+      {id:'tr6',cat:'trabalho',sub:'valores-receber',icon:'⚠️',title:'Cliente D — Atrasado!',notes:'Venceu 28/02 · COBRAR',date:'2026-02-28',amount:1000,priority:'high',alarm:true,done:false,shared:false},
+      {id:'tr7',cat:'trabalho',sub:'tarefas',icon:'📑',title:'Enviar orçamento João',notes:'Antes das 16h',date:'2026-03-07',priority:'high',alarm:true,done:false,shared:false},
+      {id:'tr8',cat:'trabalho',sub:'tarefas',icon:'🧾',title:'Emitir NF cliente A',notes:'Após pagamento',date:'2026-03-10',alarm:false,done:false,shared:false},
+      {id:'tr9',cat:'trabalho',sub:'tarefas',icon:'📞',title:'Cobrar cliente D',notes:'Atraso 7 dias',priority:'high',alarm:false,done:false,shared:false},
+      // CASA
+      {id:'c1',cat:'casa',sub:'alimentacao',icon:'☕',title:'Preparar café',notes:'Rotina diária',time:'06:45',repeat:'daily',alarm:true,done:false,shared:false},
+      {id:'c2',cat:'casa',sub:'alimentacao',icon:'🍳',title:'Começar almoço',notes:'Iniciar 1h antes',time:'11:00',repeat:'daily',alarm:true,done:false,shared:false},
+      {id:'c3',cat:'casa',sub:'alimentacao',icon:'🍽️',title:'Hora do almoço',notes:'Família reunida',time:'12:00',repeat:'daily',alarm:true,done:false,shared:false},
+      {id:'c4',cat:'casa',sub:'alimentacao',icon:'🍳',title:'Começar jantar',notes:'Iniciar preparo',time:'18:00',repeat:'daily',alarm:true,done:false,shared:false},
+      {id:'c5',cat:'casa',sub:'alimentacao',icon:'🥘',title:'Hora do jantar',notes:'Família',time:'19:00',repeat:'daily',alarm:true,done:false,shared:false},
+      {id:'c6',cat:'casa',sub:'limpeza',icon:'🧹',title:'Varrer e passar pano',notes:'Semanal',repeat:'weekly',alarm:false,done:false,shared:false},
+      {id:'c7',cat:'casa',sub:'limpeza',icon:'🪣',title:'Limpar banheiros',notes:'Semanal',repeat:'weekly',alarm:false,done:false,shared:false},
+      {id:'c8',cat:'casa',sub:'limpeza',icon:'👕',title:'Lavar roupas',notes:'2x/semana',repeat:'weekly',alarm:false,done:false,shared:false},
+      {id:'c9',cat:'casa',sub:'limpeza',icon:'🗑️',title:'Recolher lixo',notes:'Seg/Qui',repeat:'weekly',alarm:false,done:false,shared:false},
+      {id:'c10',cat:'casa',sub:'limpeza',icon:'🪟',title:'Limpar janelas',notes:'Mensal',repeat:'monthly',alarm:false,done:false,shared:false},
+      // PLANTAS
+      {id:'pl1',cat:'plantas',sub:'rega',icon:'🌿',title:'Samambaia',notes:'Solo úmido · diária',time:'08:00',repeat:'daily',alarm:true,done:false,shared:false},
+      {id:'pl2',cat:'plantas',sub:'rega',icon:'🌵',title:'Cactos',notes:'Pouca água · 2x/sem',repeat:'weekly',alarm:false,done:false,shared:false},
+      {id:'pl3',cat:'plantas',sub:'rega',icon:'🌺',title:'Orquídea',notes:'Base com água · 2x/sem',repeat:'weekly',alarm:false,done:false,shared:false},
+      {id:'pl4',cat:'plantas',sub:'rega',icon:'🌱',title:'Horta (temperos)',notes:'Solo sempre úmido',time:'08:00',repeat:'daily',alarm:false,done:false,shared:false},
+      {id:'pl5',cat:'plantas',sub:'manutencao',icon:'🌿',title:'Adubação geral',notes:'Fertilizante · todas',date:'2026-04-01',repeat:'monthly',alarm:true,done:false,shared:false},
+      {id:'pl6',cat:'plantas',sub:'manutencao',icon:'✂️',title:'Poda samambaia',notes:'Folhas velhas',date:'2026-04-15',repeat:'monthly',alarm:false,done:false,shared:false},
+      // FINANCEIRO
+      {id:'fi1',cat:'financeiro',sub:'pagar',icon:'🏠',title:'Financiamento/Aluguel',notes:'Débito automático · dia 10',repeat:'monthly',priority:'high',amount:1800,alarm:true,done:false,shared:false},
+      {id:'fi2',cat:'financeiro',sub:'pagar',icon:'💡',title:'Conta de luz',notes:'Pago 05/03',date:'2026-03-05',amount:280,alarm:false,done:true,shared:false},
+      {id:'fi3',cat:'financeiro',sub:'pagar',icon:'💳',title:'Fatura cartão Nubank',notes:'Vence dia 12',date:'2026-03-12',amount:950,priority:'high',alarm:true,done:false,shared:false},
+      {id:'fi4',cat:'financeiro',sub:'pagar',icon:'📱',title:'Plano família (4 linhas)',notes:'Dia 15',date:'2026-03-15',amount:220,alarm:true,done:false,shared:false},
+      {id:'fi5',cat:'financeiro',sub:'pagar',icon:'🏥',title:'Plano de saúde',notes:'3 vidas · dia 15',date:'2026-03-15',amount:680,alarm:true,done:false,shared:false},
+      {id:'fi6',cat:'financeiro',sub:'pagar',icon:'🌐',title:'Internet + TV',notes:'Débito auto · dia 20',date:'2026-03-20',amount:180,alarm:true,done:false,shared:false},
+      {id:'fi7',cat:'financeiro',sub:'receber',icon:'💵',title:'Cliente A — Projeto',notes:'Parcela 2/2',date:'2026-03-10',amount:2800,priority:'high',alarm:true,done:false,shared:false},
+      {id:'fi8',cat:'financeiro',sub:'receber',icon:'💵',title:'Cliente B — Mensalidade',notes:'Recorrente',date:'2026-03-15',amount:1500,alarm:false,done:false,shared:false},
+      {id:'fi9',cat:'financeiro',sub:'receber',icon:'💵',title:'Cliente C',notes:'Pago 01/03',amount:3200,alarm:false,done:true,shared:false},
+      {id:'fi10',cat:'financeiro',sub:'receber',icon:'⚠️',title:'Cliente D — Atrasado',notes:'Venceu 28/02 · cobrar!',date:'2026-02-28',amount:1000,priority:'high',alarm:true,done:false,shared:false},
+      {id:'fi11',cat:'financeiro',sub:'investimento',icon:'📈',title:'Aportar Tesouro Direto',notes:'Todo mês · dia 10',repeat:'monthly',alarm:true,done:false,shared:false},
+      {id:'fi12',cat:'financeiro',sub:'investimento',icon:'💳',title:'Revisar extrato cartão',notes:'Checar cobranças',repeat:'weekly',alarm:false,done:false,shared:false},
+      {id:'fi13',cat:'financeiro',sub:'investimento',icon:'🐷',title:'Reserva emergência',notes:'Meta: 6x despesas mensais',alarm:false,done:false,shared:false},
+      // DOCUMENTOS
+      {id:'d1',cat:'documentos',sub:'pessoais',icon:'🪪',title:'CNH — eu',notes:'Cat B · vence 2027',alarm:false,done:false,shared:false},
+      {id:'d2',cat:'documentos',sub:'pessoais',icon:'🪪',title:'CNH — esposa',notes:'Cat B · vence 2028',alarm:false,done:false,shared:false},
+      {id:'d3',cat:'documentos',sub:'pessoais',icon:'📘',title:'Passaporte — eu',notes:'Renovar! Vence ago/26',date:'2026-08-01',priority:'high',alarm:true,done:false,shared:false},
+      {id:'d4',cat:'documentos',sub:'pessoais',icon:'👶',title:'Certidão nascimento bebê',notes:'URGENTE · prazo 15 dias',priority:'high',alarm:true,done:false,shared:false},
+      {id:'d5',cat:'documentos',sub:'pessoais',icon:'📄',title:'CPF bebê',notes:'Após certidão',alarm:false,done:false,shared:false},
+      {id:'d6',cat:'documentos',sub:'veiculos-doc',icon:'🚗',title:'IPVA HB20 Parc 2/3',notes:'Pagar via DETRAN',date:'2026-03-20',alarm:true,done:false,shared:false},
+      {id:'d7',cat:'documentos',sub:'veiculos-doc',icon:'📋',title:'CRLV HB20',notes:'Licenciamento 2026 · em dia',alarm:false,done:false,shared:false},
+      {id:'d8',cat:'documentos',sub:'veiculos-doc',icon:'🛻',title:'IPVA Strada',notes:'Cota única pago',alarm:false,done:true,shared:false},
+      {id:'d9',cat:'documentos',sub:'casa-doc',icon:'🏥',title:'Plano de saúde',notes:'Renovar jun/26',date:'2026-06-01',alarm:true,done:false,shared:false},
+      {id:'d10',cat:'documentos',sub:'casa-doc',icon:'🔥',title:'Extintor — recarga',notes:'Anual obrigatório · jun/26',date:'2026-06-01',alarm:true,done:false,shared:false},
+      {id:'d11',cat:'documentos',sub:'casa-doc',icon:'🐈',title:'Registro Max (microchip)',notes:'Pendente',priority:'medium',alarm:false,done:false,shared:false},
+    ],
+    shopping: [
+      {id:'sh1',sub:'mercado',label:'Frango (peito)',qty:'1 kg',checked:false},
+      {id:'sh2',sub:'mercado',label:'Ovos',qty:'30 un',checked:true},
+      {id:'sh3',sub:'mercado',label:'Carne moída',qty:'500 g',checked:false},
+      {id:'sh4',sub:'mercado',label:'Arroz',qty:'5 kg',checked:false},
+      {id:'sh5',sub:'mercado',label:'Feijão carioca',qty:'2 kg',checked:true},
+      {id:'sh6',sub:'mercado',label:'Óleo de soja',qty:'2 un',checked:true},
+      {id:'sh7',sub:'bebe',label:'Fralda RN',qty:'2 pcts',checked:false},
+      {id:'sh8',sub:'bebe',label:'Lenço umedecido',qty:'3 pcts',checked:false},
+      {id:'sh9',sub:'bebe',label:'Creme assadura',qty:'1 un',checked:true},
+      {id:'sh10',sub:'pets',label:'Ração Luna 20kg',qty:'1 sc',checked:false},
+      {id:'sh11',sub:'pets',label:'Ração Max (gato)',qty:'3 kg',checked:false},
+      {id:'sh12',sub:'farmacia',label:'Losartana 50mg (cx)',qty:'1 cx',checked:false},
+      {id:'sh13',sub:'farmacia',label:'Vitamina D (esposa)',qty:'1 fr',checked:false},
+      {id:'sh14',sub:'farmacia',label:'Detergente',qty:'4 un',checked:true},
+      {id:'sh15',sub:'farmacia',label:'Papel higiênico',qty:'2 pcts',checked:true},
+      {id:'sh16',sub:'farmacia',label:'Sabão em pó',qty:'1 cx',checked:false},
+    ],
+    vehicles: [
+      {id:'v1',sub:'hb20',name:'HB20 2022',plate:'ABC-1D23',icon:'🚗',checks:[
+        {label:'Água Radiador',val:'✅ OK',status:'ok',note:'verificado hoje'},
+        {label:'Óleo Motor',val:'⚠️ Baixo',status:'warn',note:'completar em breve'},
+        {label:'Pressão Pneus',val:'✅ 32 PSI',status:'ok',note:'calibrado 03/03'},
+        {label:'Troca Óleo',val:'🔴 Vence',status:'bad',note:'em 5 dias · 12/03'},
+        {label:'Rodízio Pneus',val:'📅 Próximo',status:'warn',note:'abr · 10k km'},
+        {label:'IPVA 2026',val:'⏳ Parc 2/3',status:'warn',note:'vence 20/03'},
+      ]},
+      {id:'v2',sub:'strada',name:'Strada 2019',plate:'XYZ-4E56',icon:'🛻',checks:[
+        {label:'Óleo',val:'✅ OK',status:'ok',note:'trocado jan/26'},
+        {label:'Pneus',val:'✅ 34 PSI',status:'ok',note:'calibrado hoje'},
+        {label:'Revisão',val:'📅 Jun',status:'warn',note:'revisão anual'},
+        {label:'Seguro',val:'✅ Vigente',status:'ok',note:'até dez/26'},
+      ]},
+    ]
+  };
+}
+
+/* ═══════════════════════════════════════
+   DATABASE
+═══════════════════════════════════════ */
+const DB = {
+  KEY: 'vidaapp_v3',
+  d: null,
+  load() {
+    try {
+      const s = localStorage.getItem(this.KEY);
+      this.d = s ? JSON.parse(s) : defaultData();
+    } catch(e) { this.d = defaultData(); }
+  },
+  save() {
+    try { localStorage.setItem(this.KEY, JSON.stringify(this.d)); } catch(e) {}
+  },
+  addTask(t) { t.id='T'+Date.now(); t.done=false; this.d.tasks.push(t); this.save(); return t; },
+  updateTask(id, updates) {
+    const i = this.d.tasks.findIndex(t=>t.id===id);
+    if(i>=0){ Object.assign(this.d.tasks[i], updates); this.save(); return this.d.tasks[i]; }
+  },
+  toggleDone(id) {
+    const t = this.d.tasks.find(t=>t.id===id);
+    if(t){ t.done=!t.done; this.save(); } return t;
+  },
+  deleteTask(id) { this.d.tasks=this.d.tasks.filter(t=>t.id!==id); this.save(); },
+  addShopping(s) { s.id='S'+Date.now(); s.checked=false; this.d.shopping.push(s); this.save(); return s; },
+  toggleCheck(id) {
+    const s = this.d.shopping.find(s=>s.id===id);
+    if(s){ s.checked=!s.checked; this.save(); } return s;
+  },
+  deleteShop(id) { this.d.shopping=this.d.shopping.filter(s=>s.id!==id); this.save(); },
+};
+
+/* ═══════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════ */
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtDate(d){ if(!d)return''; const p=d.split('-'); return p[2]+'/'+p[1]; }
+function fmtMoney(n){ return n?'R$'+Number(n).toLocaleString('pt-BR',{minimumFractionDigits:0}):''; }
+function fmtTime(t){ return t||''; }
+function itemDisplay(item){
+  const right = item.time ? item.time : (item.date ? fmtDate(item.date) : '');
+  const rep = REPEATS[item.repeat]||'';
+  let sub = esc(item.notes||'');
+  if(item.amount) sub += (sub?' · ':'')+fmtMoney(item.amount);
+  return {right, rep, sub};
+}
+
+/* ═══════════════════════════════════════
+   RENDER HELPERS
+═══════════════════════════════════════ */
+function renderTaskItem(t, color){
+  const {right, rep, sub} = itemDisplay(t);
+  const badges = (t.shared?'<span class="badge b-share">compartilhado</span>':'')
+               + (t.priority==='high'?'<span class="badge b-red">alta</span>':'');
+  return `<div class="item${t.done?' done':''}" onclick="toggleDone('${t.id}')" style="--ic:${color}">
+    <div class="item-stripe"></div>
+    <div class="item-icon">${esc(t.icon||'📋')}</div>
+    <div class="item-body">
+      <div class="item-title">${esc(t.title)}${badges}</div>
+      ${sub?`<div class="item-sub">${sub}</div>`:''}
+    </div>
+    <div class="item-right">
+      <div class="item-time">${esc(right)}</div>
+      ${rep?`<div class="item-rep">${esc(rep)}</div>`:''}
+    </div>
+    <button class="item-del" onclick="askDelete(event,'task','${t.id}')">×</button>
+  </div>`;
+}
+
+function renderShopItem(s, color='#f9d94f'){
+  return `<div class="citem${s.checked?' checked':''}" onclick="toggleCheck('${s.id}')" style="--cc:${color}">
+    <div class="cbox"></div>
+    <div class="clabel">${esc(s.label)}</div>
+    <div class="cqty">${esc(s.qty)}</div>
+    <button class="item-del" onclick="askDelete(event,'shop','${s.id}')">×</button>
+  </div>`;
+}
+
+function renderVehicle(v){
+  return `<div class="veh-grid">${v.checks.map(c=>`
+    <div class="vg-item">
+      <div class="vg-l">${esc(c.label)}</div>
+      <div class="vg-v">${esc(c.val)}</div>
+      <div class="vg-s ${c.status}">${esc(c.note)}</div>
+    </div>`).join('')}</div>`;
+}
+
+function renderSection(sec, cat){
+  const color = CATS[cat]?.color||'#888';
+  let inner = '';
+
+  if(sec.shop){
+    const items = DB.d.shopping.filter(s=>s.sub===sec.sub||s.sub===sec.sub.replace('mercado-',''));
+    // group mercado by sub-category
+    const mercs = DB.d.shopping.filter(s=>['mercado','proteinas','basicos','bebe','pets'].includes(s.sub)&&sec.sub==='mercado');
+    const farm  = DB.d.shopping.filter(s=>s.sub==='farmacia'&&sec.sub==='farmacia');
+    const list  = sec.sub==='mercado'?mercs:farm;
+    const total = list.length, done = list.filter(s=>s.checked).length;
+    inner = `<div class="prog-row">
+      <div class="prog-label"><span>Progresso</span><span>${done} de ${total}</span></div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${total?Math.round(done/total*100):0}%;background:linear-gradient(90deg,${color},#f7a94f)"></div></div>
+    </div>`+list.map(s=>renderShopItem(s,color)).join('')
+    +`<div class="cat-add-row"><button class="cat-add" style="--cat-c:${color}" onclick="openAddShop('${sec.sub}')">+ Adicionar item</button></div>`;
+  } else if(sec.vehicle){
+    const v = DB.d.vehicles.find(v=>v.sub===sec.sub);
+    inner = v ? renderVehicle(v)+'<div class="cat-add-row"><button class="cat-add" style="--cat-c:'+color+'" onclick="openAdd(\'veiculos\',\''+sec.sub+'\')">+ Tarefa manutenção</button></div>' : '<div class="empty-items">Sem dados.</div>';
+  } else {
+    const items = DB.d.tasks.filter(t=>t.cat===cat&&t.sub===sec.sub);
+    inner = items.map(t=>renderTaskItem(t,color)).join('')
+           +(items.length===0?'<div class="empty-items">Nenhum item. Toque em <b>+ Adicionar</b>.</div>':'')
+           +`<div class="cat-add-row"><button class="cat-add" style="--cat-c:${color}" onclick="openAdd('${cat}','${sec.sub}')">+ Adicionar</button></div>`;
+    // finance summary for receber/pagar sections
+    if(sec.finance){
+      const fItems = DB.d.tasks.filter(t=>t.cat===cat&&t.sub===sec.sub);
+      const total = fItems.filter(t=>!t.done).reduce((a,t)=>a+(t.amount||0),0);
+      const recebido = fItems.filter(t=>t.done).reduce((a,t)=>a+(t.amount||0),0);
+      if(total+recebido>0){
+        inner = `<div class="fin-sum">
+          <div class="fin-row"><span class="fin-lbl">${sec.sub==='pagar'?'💳 Total a pagar':'📥 Total a receber'}</span><span class="fin-val ${sec.sub==='pagar'?'bad':'ok'}">${fmtMoney(total+recebido)}</span></div>
+          <div class="fin-row"><span class="fin-lbl">${sec.sub==='pagar'?'✅ Pago':'✅ Recebido'}</span><span class="fin-val ok">${fmtMoney(recebido)}</span></div>
+          <div class="fin-row"><span class="fin-lbl">⏳ Pendente</span><span class="fin-val warn">${fmtMoney(total)}</span></div>
+        </div>`+inner;
+      }
+    }
+  }
+
+  return `<div class="cat-block open" data-sec="${cat}-${sec.sub}">
+    <div class="cat-head" onclick="toggleBlock(this)">
+      <div class="cat-dot" style="background:${color};box-shadow:0 0 7px ${color}66"></div>
+      <div class="cat-icon">${sec.icon}</div>
+      <div class="cat-name">${sec.title}</div>
+      <div class="cat-count" id="cnt-${cat}-${sec.sub}">0</div>
+      <div class="cat-chevron">▼</div>
+    </div>
+    <div class="cat-body">${inner}</div>
+  </div>`;
+}
+
+function renderPage(pageId){
+  const el = document.getElementById('page-'+pageId);
+  if(!el||pageId==='hoje') return;
+  const defs = PAGE_DEFS[pageId]||[];
+  const cat = pageId;
+  el.innerHTML = defs.map(sec=>renderSection(sec,cat)).join('');
+  // update counts
+  defs.forEach(sec=>{
+    const cnt = document.getElementById('cnt-'+cat+'-'+sec.sub);
+    if(!cnt) return;
+    if(sec.shop){
+      const l = sec.sub==='mercado'
+        ? DB.d.shopping.filter(s=>['mercado','proteinas','basicos','bebe','pets'].includes(s.sub))
+        : DB.d.shopping.filter(s=>s.sub==='farmacia');
+      cnt.textContent=l.length;
+    } else if(sec.vehicle) {
+      cnt.textContent='';
+    } else {
+      cnt.textContent=DB.d.tasks.filter(t=>t.cat===cat&&t.sub===sec.sub).length;
+    }
+  });
+}
+
+/* ═══════════════════════════════════════
+   HOJE PAGE
+═══════════════════════════════════════ */
+function renderHoje(){
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0,10);
+  const allTasks = DB.d.tasks;
+  const todayItems = allTasks.filter(t=>{
+    if(t.repeat==='daily') return true;
+    if(t.date===todayStr) return true;
+    return false;
+  }).sort((a,b)=>(a.time||'99:99')<(b.time||'99:99')?-1:1);
+
+  const alarms = allTasks.filter(t=>t.alarm&&!t.done&&t.time).length;
+  const tasks  = todayItems.length;
+  const remedios = todayItems.filter(t=>t.icon==='💊'||t.sub==='remedios').length;
+  const pets   = todayItems.filter(t=>t.cat==='pets').length;
+
+  // Next alarm
+  const now = today;
+  const nowMin = now.getHours()*60+now.getMinutes();
+  const nextAlarm = allTasks
+    .filter(t=>t.alarm&&!t.done&&t.time)
+    .map(t=>{ const [h,m]=t.time.split(':').map(Number); return {...t,tm:h*60+m}; })
+    .filter(t=>t.tm>nowMin)
+    .sort((a,b)=>a.tm-b.tm)[0];
+
+  const alarmHtml = nextAlarm ? `<div class="alarm-pill">
+    <div class="ap-bell">🔔</div>
+    <div class="ap-info">
+      <div class="al">Próximo alarme</div>
+      <div class="an">${esc(nextAlarm.title)}</div>
+      <div class="at">${esc(nextAlarm.notes||'')} · ${REPEATS[nextAlarm.repeat]||'hoje'}</div>
+    </div>
+    <div class="ap-time">${nextAlarm.time}</div>
+  </div>` : '';
+
+  const el = document.getElementById('page-hoje');
+  if(!el) return;
+
+  el.innerHTML = `
+    <div id="perm-bar"></div>
+    <div id="install-bar"></div>
+    <div class="today-hero">
+      <div class="th-label">☀️ Resumo do dia</div>
+      <div class="th-stats">
+        <div class="th-stat"><div class="n" style="color:#f76b8a">${alarms}</div><div class="l">Alarmes</div></div>
+        <div class="th-stat"><div class="n" style="color:#4f8ef7">${tasks}</div><div class="l">Tarefas</div></div>
+        <div class="th-stat"><div class="n" style="color:#4ecb71">${remedios}</div><div class="l">Remédios</div></div>
+        <div class="th-stat"><div class="n" style="color:#f7a94f">${pets}</div><div class="l">Pets</div></div>
+      </div>
+    </div>
+    ${alarmHtml}
+    <div class="cat-block open">
+      <div class="cat-head" onclick="toggleBlock(this)">
+        <div class="cat-dot" style="background:#a78bfa;box-shadow:0 0 7px #a78bfa66"></div>
+        <div class="cat-icon">📅</div>
+        <div class="cat-name">Agenda de Hoje</div>
+        <div class="cat-count">${todayItems.length}</div>
+        <div class="cat-chevron">▼</div>
+      </div>
+      <div class="cat-body">
+        ${todayItems.map(t=>renderTaskItem(t,CATS[t.cat]?.color||'#888')).join('')}
+        ${todayItems.length===0?'<div class="empty-items">Nenhuma tarefa para hoje.</div>':''}
+      </div>
+    </div>`;
+
+  // Show permission bar
+  if('Notification' in window && Notification.permission === 'default'){
+    document.getElementById('perm-bar').innerHTML = `<div class="perm-bar">
+      <p>🔔 Ativar notificações para receber alarmes</p>
+      <button class="perm-btn" onclick="requestNotif()">Ativar</button>
+    </div>`;
+  }
+  // Show install bar if prompt available
+  if(window._installPrompt){
+    document.getElementById('install-bar').innerHTML = `<div class="install-bar">
+      <p>📲 Instalar VidaApp no celular</p>
+      <button class="install-btn" onclick="installPWA()">Instalar</button>
+    </div>`;
+  }
+}
+
+function renderAll(){
+  renderHoje();
+  Object.keys(PAGE_DEFS).forEach(renderPage);
+}
+
+/* ═══════════════════════════════════════
+   ALARMS
+═══════════════════════════════════════ */
+let _alarmInterval = null;
+let _firedAlarms = new Set();
+
+function startAlarms(){
+  if(_alarmInterval) clearInterval(_alarmInterval);
+  checkAlarms();
+  _alarmInterval = setInterval(checkAlarms, 30000);
+}
+
+function checkAlarms(){
+  if(!DB.d) return;
+  const now = new Date();
+  const hhmm = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  const key = hhmm+'_'+now.toISOString().slice(0,10);
+
+  DB.d.tasks
+    .filter(t=>t.alarm && !t.done && t.time===hhmm)
+    .forEach(t=>{
+      const uid = t.id+'_'+key;
+      if(_firedAlarms.has(uid)) return;
+      _firedAlarms.add(uid);
+      fireAlarm(t);
+    });
+}
+
+function fireAlarm(task){
+  const title = task.title;
+  const body  = task.notes || CATS[task.cat]?.label || '';
+  if(navigator.serviceWorker?.controller){
+    navigator.serviceWorker.controller.postMessage({type:'ALARM',title,body,id:task.id});
+  } else if('Notification' in window && Notification.permission==='granted'){
+    try{ new Notification('⏰ '+title,{body,icon:'icon-192.png',requireInteraction:true}); }catch(e){}
+  }
+  showToast('⏰ '+title, body);
+}
+
+function requestNotif(){
+  if('Notification' in window){
+    Notification.requestPermission().then(p=>{
+      if(p==='granted') showToast('✅ Notificações ativadas!','Você receberá seus alarmes.');
+      renderHoje();
+    });
+  }
+}
+
+/* ═══════════════════════════════════════
+   TOAST
+═══════════════════════════════════════ */
+let _toastTimer = null;
+function showToast(title, body=''){
+  const t = document.getElementById('toast');
+  t.innerHTML = `<b>${esc(title)}</b>${body?'<br>'+esc(body):''}`;
+  t.classList.add('show');
+  if(_toastTimer) clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(()=>t.classList.remove('show'), 5000);
+}
+
+/* ═══════════════════════════════════════
+   UI — TABS & NAV
+═══════════════════════════════════════ */
+let _currentPage = 'hoje';
+
+function buildTabs(){
+  const wrap = document.getElementById('mtabs');
+  wrap.innerHTML = TAB_ORDER.map(id=>`
+    <div class="mtab${id==='hoje'?' on':''}" data-page="${id}" style="--tc:${TAB_COLORS[id]||'#888'}"
+         onclick="goPage('${id}')">
+      ${TAB_ICONS[id]} ${id==='hoje'?'Hoje':(CATS[id]?.label||id)}
+    </div>`).join('');
+}
+
+function buildPages(){
+  const app = document.getElementById('app');
+  app.innerHTML = TAB_ORDER.map(id=>`<div class="page${id==='hoje'?' on':''}" id="page-${id}"></div>`).join('');
+}
+
+function goPage(id){
+  if(_currentPage===id) return;
+  _currentPage = id;
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('on',p.id==='page-'+id));
+  document.querySelectorAll('.mtab').forEach(t=>t.classList.toggle('on',t.dataset.page===id));
+  document.querySelectorAll('.bn').forEach(b=>b.classList.toggle('on',b.dataset.go===id));
+  // render on demand
+  if(id==='hoje') renderHoje();
+  else renderPage(id);
+}
+
+/* ═══════════════════════════════════════
+   TOGGLE BLOCK
+═══════════════════════════════════════ */
+function toggleBlock(head){
+  head.closest('.cat-block').classList.toggle('open');
+}
+
+/* ═══════════════════════════════════════
+   TOGGLE DONE / CHECK
+═══════════════════════════════════════ */
+function toggleDone(id){
+  DB.toggleDone(id);
+  // re-render current page
+  if(_currentPage==='hoje') renderHoje();
+  else renderPage(_currentPage);
+}
+
+function toggleCheck(id){
+  DB.toggleCheck(id);
+  renderPage(_currentPage);
+}
+
+/* ═══════════════════════════════════════
+   DELETE
+═══════════════════════════════════════ */
+let _pendingDel = null;
+
+function askDelete(e, type, id){
+  e.stopPropagation();
+  _pendingDel = {type, id};
+  document.getElementById('ov-del').classList.add('open');
+}
+
+function closeDel(){
+  _pendingDel = null;
+  document.getElementById('ov-del').classList.remove('open');
+}
+
+document.getElementById('btn-del-ok').addEventListener('click', ()=>{
+  if(!_pendingDel) return;
+  if(_pendingDel.type==='task') DB.deleteTask(_pendingDel.id);
+  else DB.deleteShop(_pendingDel.id);
+  closeDel();
+  if(_currentPage==='hoje') renderHoje();
+  else renderPage(_currentPage);
+  showToast('🗑️ Item excluído');
+});
+
+/* ═══════════════════════════════════════
+   ADD MODAL
+═══════════════════════════════════════ */
+let _editMode = false;
+
+function openAdd(cat, sub){
+  _editMode = false;
+  document.getElementById('edit-id').value = '';
+  document.getElementById('modal-h').textContent = '➕ Nova Tarefa / Alarme';
+  document.getElementById('f-title').value = '';
+  document.getElementById('f-icon').value = CATS[cat]?.icon||'📋';
+  document.getElementById('f-date').value = '';
+  document.getElementById('f-time').value = '';
+  document.getElementById('f-repeat').value = '';
+  document.getElementById('f-priority').value = 'medium';
+  document.getElementById('f-shared').value = '0';
+  document.getElementById('f-alarm').value = '1';
+  document.getElementById('f-notes').value = '';
+  document.getElementById('f-amount').value = '';
+  document.getElementById('fg-amount').style.display = ['receber','pagar','valores-receber'].includes(sub) ? 'block' : 'none';
+  buildCatGrid(cat);
+  buildSubSelect(cat, sub);
+  document.getElementById('ov-add').classList.add('open');
+  setTimeout(()=>document.getElementById('f-title').focus(), 300);
+}
+
+function openAddShop(sub){
+  // Simple prompt for shopping
+  const label = prompt('Nome do item:');
+  if(!label) return;
+  const qty = prompt('Quantidade:', '1 un') || '1 un';
+  DB.addShopping({sub, label, qty});
+  renderPage(_currentPage);
+  showToast('✅ Item adicionado!');
+}
+
+function buildCatGrid(activeCat){
+  const grid = document.getElementById('cat-grid');
+  grid.innerHTML = Object.entries(CATS).map(([k,v])=>`
+    <div class="cg-btn${k===activeCat?' sel':''}" data-cat="${k}" style="--gc:${v.color}" onclick="selectCat('${k}')">
+      <div class="ge">${v.icon}</div>
+      <div class="gl">${v.label}</div>
+    </div>`).join('');
+}
+
+function selectCat(cat){
+  document.querySelectorAll('.cg-btn').forEach(b=>b.classList.toggle('sel',b.dataset.cat===cat));
+  buildSubSelect(cat);
+  const isFin = cat==='financeiro'||cat==='trabalho';
+  document.getElementById('fg-amount').style.display = isFin ? 'block' : 'none';
+}
+
+function buildSubSelect(cat, activeSub=''){
+  const sel = document.getElementById('f-sub');
+  const subs = SUBS[cat]||[];
+  sel.innerHTML = subs.map(s=>`<option value="${s.v}"${s.v===activeSub?' selected':''}>${s.l}</option>`).join('');
+}
+
+function getSelectedCat(){
+  const sel = document.querySelector('.cg-btn.sel');
+  return sel ? sel.dataset.cat : 'pessoal';
+}
+
+function closeAdd(){
+  document.getElementById('ov-add').classList.remove('open');
+}
+
+function saveItem(){
+  const title = document.getElementById('f-title').value.trim();
+  if(!title){ alert('Título obrigatório!'); return; }
+  const cat   = getSelectedCat();
+  const sub   = document.getElementById('f-sub').value;
+  const icon  = document.getElementById('f-icon').value.trim()||CATS[cat]?.icon||'📋';
+  const date  = document.getElementById('f-date').value;
+  const time  = document.getElementById('f-time').value;
+  const repeat= document.getElementById('f-repeat').value;
+  const pri   = document.getElementById('f-priority').value;
+  const shared= document.getElementById('f-shared').value==='1';
+  const alarm = document.getElementById('f-alarm').value==='1';
+  const notes = document.getElementById('f-notes').value.trim();
+  const amount= parseFloat(document.getElementById('f-amount').value)||undefined;
+  const editId= document.getElementById('edit-id').value;
+
+  const payload = {cat,sub,icon,title,date,time,repeat,priority:pri,shared,alarm,notes,amount};
+  if(editId){
+    DB.updateTask(editId, payload);
+  } else {
+    DB.addTask(payload);
+  }
+  closeAdd();
+  if(_currentPage==='hoje') renderHoje();
+  else renderPage(_currentPage);
+  showToast('✅ Salvo!', title);
+}
+
+/* ═══════════════════════════════════════
+   FAB
+═══════════════════════════════════════ */
+document.getElementById('fab').addEventListener('click', ()=>{
+  const cat = _currentPage==='hoje'?'pessoal':_currentPage;
+  openAdd(cat, SUBS[cat]?.[0]?.v||'');
+});
+
+/* ═══════════════════════════════════════
+   BOTTOM NAV
+═══════════════════════════════════════ */
+document.getElementById('bnav').addEventListener('click', e=>{
+  const bn = e.target.closest('.bn');
+  if(bn && bn.dataset.go) goPage(bn.dataset.go);
+});
+
+/* close overlays on background click */
+['ov-add','ov-del'].forEach(id=>{
+  document.getElementById(id).addEventListener('click', e=>{
+    if(e.target.id===id){ if(id==='ov-add') closeAdd(); else closeDel(); }
+  });
+});
+
+/* ═══════════════════════════════════════
+   DATE HEADER
+═══════════════════════════════════════ */
+function updateHeader(){
+  const days=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  const months=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const now = new Date();
+  document.getElementById('hdr-day').textContent = days[now.getDay()]+', '+String(now.getDate()).padStart(2,'0');
+  document.getElementById('hdr-mon').textContent = months[now.getMonth()]+' de '+now.getFullYear();
+}
+
+/* ═══════════════════════════════════════
+   PWA
+═══════════════════════════════════════ */
+window._installPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e=>{
+  e.preventDefault();
+  window._installPrompt = e;
+  renderHoje(); // show install bar
+});
+
+function installPWA(){
+  if(!window._installPrompt) return;
+  window._installPrompt.prompt();
+  window._installPrompt.userChoice.then(r=>{
+    if(r.outcome==='accepted') showToast('📲 VidaApp instalado!');
+    window._installPrompt = null;
+  });
+}
+
+function registerSW(){
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  }
+}
+
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+function init(){
+  DB.load();
+  buildTabs();
+  buildPages();
+  updateHeader();
+  renderHoje();
+  startAlarms();
+  registerSW();
+  // Prerender today's categories for smooth navigation
+  requestAnimationFrame(()=>{ renderPage('saude'); });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
