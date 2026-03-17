@@ -168,6 +168,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);max-width:43
 .btn-cancel{background:var(--s3);color:var(--text)}
 .btn-danger{background:#f76b4f22;color:#f76b4f;border:1px solid #f76b4f44}
 
+/* MANAGE LIST */
+.manage-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid var(--border);border-radius:12px;margin-bottom:8px;background:var(--s2)}
+.mi-icon{font-size:22px;flex-shrink:0}
+.mi-name{flex:1;font-size:13px;font-weight:700}
+.mi-del{background:none;border:1px solid #f76b4f44;border-radius:8px;color:#f76b4f;font-size:14px;cursor:pointer;padding:5px 10px;transition:background .15s}
+.mi-del:hover{background:#f76b4f22}
+.manage-section-title{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin:14px 0 8px}
+
 /* TOAST */
 .toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);background:linear-gradient(135deg,#1e2340,#2a1f3d);border:1px solid #a78bfa44;border-radius:14px;padding:12px 18px;font-size:13px;font-weight:700;z-index:300;opacity:0;transition:all .3s;pointer-events:none;max-width:380px;width:90%;text-align:center;box-shadow:0 4px 20px #00000055}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -272,6 +280,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);max-width:43
     <button class="btn-cancel" onclick="closeDel()">Cancelar</button>
     <button class="btn-danger" id="btn-del-ok">Excluir</button>
   </div>
+</div>
+</div>
+
+<!-- MODAL: MANAGE PETS / VEHICLES -->
+<div id="ov-manage" class="overlay">
+<div class="modal">
+  <div class="mhandle" onclick="closeManage()"></div>
+  <h3 id="manage-h">⚙️ Gerenciar</h3>
+  <div id="manage-list"></div>
+  <div id="manage-add-form"></div>
+  <button class="btn-cancel" style="margin-top:14px" onclick="closeManage()">Fechar</button>
 </div>
 </div>
 
@@ -505,7 +524,11 @@ function defaultData() {
         {label:'Revisão',val:'📅 Jun',status:'warn',note:'revisão anual'},
         {label:'Seguro',val:'✅ Vigente',status:'ok',note:'até dez/26'},
       ]},
-    ]
+    ],
+    pets: [
+      {id:'pet1',sub:'luna',name:'Luna',type:'Cão',icon:'🐕'},
+      {id:'pet2',sub:'max',name:'Max',type:'Gato',icon:'🐈'},
+    ],
   };
 }
 
@@ -523,6 +546,24 @@ const DB = {
   },
   save() {
     try { localStorage.setItem(this.KEY, JSON.stringify(this.d)); } catch(e) {}
+  },
+  addPet(p) {
+    if(!this.d.pets) this.d.pets=[];
+    p.id='PET'+Date.now();
+    this.d.pets.push(p); this.save(); syncDynamicData(); return p;
+  },
+  deletePet(id) {
+    const p=this.d.pets.find(x=>x.id===id);
+    if(p){ this.d.pets=this.d.pets.filter(x=>x.id!==id); this.d.tasks=this.d.tasks.filter(t=>!(t.cat==='pets'&&t.sub===p.sub)); this.save(); syncDynamicData(); }
+  },
+  addVehicle(v) {
+    if(!this.d.vehicles) this.d.vehicles=[];
+    v.id='VEH'+Date.now(); v.checks=v.checks||[];
+    this.d.vehicles.push(v); this.save(); syncDynamicData(); return v;
+  },
+  deleteVehicle(id) {
+    const v=this.d.vehicles.find(x=>x.id===id);
+    if(v){ this.d.vehicles=this.d.vehicles.filter(x=>x.id!==id); this.d.tasks=this.d.tasks.filter(t=>!(t.cat==='veiculos'&&t.sub===v.sub)); this.save(); syncDynamicData(); }
   },
   addTask(t) { t.id='T'+Date.now(); t.done=false; this.d.tasks.push(t); this.save(); return t; },
   updateTask(id, updates) {
@@ -543,7 +584,28 @@ const DB = {
 };
 
 /* ═══════════════════════════════════════
-   HELPERS
+   SYNC DYNAMIC DATA (pets / vehicles)
+═══════════════════════════════════════ */
+function syncDynamicData(){
+  // Migrate: add pets array if missing in stored data
+  if(!DB.d.pets){
+    DB.d.pets=[
+      {id:'pet1',sub:'luna',name:'Luna',type:'Cão',icon:'🐕'},
+      {id:'pet2',sub:'max',name:'Max',type:'Gato',icon:'🐈'},
+    ];
+    DB.save();
+  }
+  // Rebuild SUBS & PAGE_DEFS from persisted data
+  SUBS.pets = DB.d.pets.map(p=>({v:p.sub, l:p.name+' ('+p.type+')'}));
+  PAGE_DEFS.pets = DB.d.pets.map(p=>({title:p.name+' ('+p.type+')', icon:p.icon, sub:p.sub}));
+  SUBS.veiculos = DB.d.vehicles.map(v=>({v:v.sub, l:v.name+(v.plate?' · '+v.plate:'')}));
+  PAGE_DEFS.veiculos = DB.d.vehicles.map(v=>({
+    title: v.name+(v.plate?' · '+v.plate:''),
+    icon: v.icon||'🚗', sub:v.sub, vehicle:true
+  }));
+}
+
+/* ═══════════════════════════════════════
 ═══════════════════════════════════════ */
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fmtDate(d){ if(!d)return''; const p=d.split('-'); return p[2]+'/'+p[1]; }
@@ -653,7 +715,17 @@ function renderPage(pageId){
   if(!el||pageId==='hoje') return;
   const defs = PAGE_DEFS[pageId]||[];
   const cat = pageId;
-  el.innerHTML = defs.map(sec=>renderSection(sec,cat)).join('');
+
+  let manageBtn = '';
+  if(pageId==='pets'||pageId==='veiculos'){
+    const lbl = pageId==='pets'?'⚙️ Gerenciar Pets':'⚙️ Gerenciar Veículos';
+    const color = pageId==='pets'?'#f7a94f':'#f76b4f';
+    manageBtn = `<div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+      <button class="cat-add" style="--cat-c:${color}" onclick="openManage('${pageId}')">${lbl}</button>
+    </div>`;
+  }
+
+  el.innerHTML = manageBtn + defs.map(sec=>renderSection(sec,cat)).join('');
   // update counts
   defs.forEach(sec=>{
     const cnt = document.getElementById('cnt-'+cat+'-'+sec.sub);
@@ -993,6 +1065,123 @@ function saveItem(){
 }
 
 /* ═══════════════════════════════════════
+   MANAGE PETS / VEHICLES
+═══════════════════════════════════════ */
+let _manageType = null;
+
+function openManage(type){
+  _manageType = type;
+  document.getElementById('manage-h').textContent = type==='pets' ? '🐾 Gerenciar Pets' : '🚗 Gerenciar Veículos';
+  renderManageList();
+  renderManageAddForm();
+  document.getElementById('ov-manage').classList.add('open');
+}
+
+function closeManage(){
+  document.getElementById('ov-manage').classList.remove('open');
+  _manageType = null;
+}
+
+function renderManageList(){
+  const el = document.getElementById('manage-list');
+  if(_manageType==='pets'){
+    const pets = DB.d.pets||[];
+    if(!pets.length){ el.innerHTML='<div class="empty-items">Nenhum pet cadastrado.</div>'; return; }
+    el.innerHTML = '<div class="manage-section-title">Pets cadastrados</div>'
+      + pets.map(p=>`<div class="manage-item">
+        <div class="mi-icon">${esc(p.icon)}</div>
+        <div class="mi-name">${esc(p.name)}<br><span style="font-size:11px;color:var(--muted);font-weight:400">${esc(p.type)}</span></div>
+        <button class="mi-del" onclick="confirmDeletePet('${p.id}')">🗑️ Excluir</button>
+      </div>`).join('');
+  } else {
+    const vehs = DB.d.vehicles||[];
+    if(!vehs.length){ el.innerHTML='<div class="empty-items">Nenhum veículo cadastrado.</div>'; return; }
+    el.innerHTML = '<div class="manage-section-title">Veículos cadastrados</div>'
+      + vehs.map(v=>`<div class="manage-item">
+        <div class="mi-icon">${esc(v.icon||'🚗')}</div>
+        <div class="mi-name">${esc(v.name)}<br><span style="font-size:11px;color:var(--muted);font-weight:400">${esc(v.plate||'')}</span></div>
+        <button class="mi-del" onclick="confirmDeleteVehicle('${v.id}')">🗑️ Excluir</button>
+      </div>`).join('');
+  }
+}
+
+function renderManageAddForm(){
+  const el = document.getElementById('manage-add-form');
+  if(_manageType==='pets'){
+    el.innerHTML = `
+      <div class="manage-section-title">Adicionar novo pet</div>
+      <div class="fg"><label>Nome *</label><input type="text" id="new-pet-name" placeholder="Ex: Rex"></div>
+      <div class="two-col">
+        <div class="fg"><label>Tipo</label>
+          <select id="new-pet-type">
+            <option>Cão</option><option>Gato</option><option>Peixe</option>
+            <option>Pássaro</option><option>Coelho</option><option>Outro</option>
+          </select>
+        </div>
+        <div class="fg"><label>Ícone (emoji)</label><input type="text" id="new-pet-icon" placeholder="🐕" maxlength="4" value="🐾"></div>
+      </div>
+      <button class="save-btn" onclick="savePet()">➕ Adicionar Pet</button>`;
+  } else {
+    el.innerHTML = `
+      <div class="manage-section-title">Adicionar novo veículo</div>
+      <div class="fg"><label>Nome / Modelo *</label><input type="text" id="new-veh-name" placeholder="Ex: Onix 2023"></div>
+      <div class="two-col">
+        <div class="fg"><label>Placa</label><input type="text" id="new-veh-plate" placeholder="ABC-1D23" style="text-transform:uppercase"></div>
+        <div class="fg"><label>Ícone (emoji)</label><input type="text" id="new-veh-icon" placeholder="🚗" maxlength="4" value="🚗"></div>
+      </div>
+      <button class="save-btn" onclick="saveVehicle()">➕ Adicionar Veículo</button>`;
+  }
+}
+
+function savePet(){
+  const name = document.getElementById('new-pet-name').value.trim();
+  if(!name){ alert('Nome obrigatório!'); return; }
+  const type = document.getElementById('new-pet-type').value;
+  const icon = document.getElementById('new-pet-icon').value.trim()||'🐾';
+  const sub = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+  DB.addPet({sub, name, type, icon});
+  renderManageList();
+  renderManageAddForm();
+  renderPage('pets');
+  showToast('✅ '+name+' adicionado(a)!');
+}
+
+function saveVehicle(){
+  const name = document.getElementById('new-veh-name').value.trim();
+  if(!name){ alert('Nome obrigatório!'); return; }
+  const plate = document.getElementById('new-veh-plate').value.trim().toUpperCase();
+  const icon = document.getElementById('new-veh-icon').value.trim()||'🚗';
+  const sub = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+  DB.addVehicle({sub, name, plate, icon});
+  renderManageList();
+  renderManageAddForm();
+  renderPage('veiculos');
+  showToast('✅ '+name+' adicionado(a)!');
+}
+
+function confirmDeletePet(id){
+  const p = (DB.d.pets||[]).find(x=>x.id===id);
+  if(!p) return;
+  if(confirm('Excluir "'+p.name+'"? Todas as tarefas deste pet também serão removidas.')){ 
+    DB.deletePet(id);
+    renderManageList();
+    renderPage('pets');
+    showToast('🗑️ '+p.name+' removido(a)');
+  }
+}
+
+function confirmDeleteVehicle(id){
+  const v = (DB.d.vehicles||[]).find(x=>x.id===id);
+  if(!v) return;
+  if(confirm('Excluir "'+v.name+'"? Todas as tarefas deste veículo também serão removidas.')){ 
+    DB.deleteVehicle(id);
+    renderManageList();
+    renderPage('veiculos');
+    showToast('🗑️ '+v.name+' removido(a)');
+  }
+}
+
+/* ═══════════════════════════════════════
    FAB
 ═══════════════════════════════════════ */
 document.getElementById('fab').addEventListener('click', ()=>{
@@ -1009,9 +1198,9 @@ document.getElementById('bnav').addEventListener('click', e=>{
 });
 
 /* close overlays on background click */
-['ov-add','ov-del'].forEach(id=>{
+['ov-add','ov-del','ov-manage'].forEach(id=>{
   document.getElementById(id).addEventListener('click', e=>{
-    if(e.target.id===id){ if(id==='ov-add') closeAdd(); else closeDel(); }
+    if(e.target.id===id){ if(id==='ov-add') closeAdd(); else if(id==='ov-del') closeDel(); else closeManage(); }
   });
 });
 
@@ -1057,6 +1246,7 @@ function registerSW(){
 ═══════════════════════════════════════ */
 function init(){
   DB.load();
+  syncDynamicData();
   buildTabs();
   buildPages();
   updateHeader();
